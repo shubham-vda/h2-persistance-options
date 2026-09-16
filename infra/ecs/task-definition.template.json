@@ -1,0 +1,54 @@
+{
+  "family": "mock-svc-${QA_ID}",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "${EXECUTION_ROLE_ARN}",
+  "taskRoleArn": "${TASK_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "mock-service",
+      "image": "${IMAGE_URI}",
+      "essential": true,
+      "portMappings": [
+        { "containerPort": 8080, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "DB_DATA_DIR", "value": "/data" },
+        { "name": "QA_ID", "value": "${QA_ID}" }
+      ],
+      "mountPoints": [
+        { "sourceVolume": "h2-data", "containerPath": "/data", "readOnly": false }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${LOG_GROUP}",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "${QA_ID}"
+        }
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "h2-data",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "${EFS_FILE_SYSTEM_ID}",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "${ACCESS_POINT_ID}",
+          "iam": "ENABLED"
+        }
+      }
+    }
+  ]
+}

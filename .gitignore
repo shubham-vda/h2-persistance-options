@@ -3,3 +3,9 @@ data/
 *.class
 .idea/
 *.iml
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
